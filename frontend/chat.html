@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat — PDFChat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="bg-dark text-light" style="height: 100vh; overflow: hidden;">
+
+  <div class="d-flex h-100">
+
+    <!-- ========== SIDEBAR ========== -->
+    <div class="sidebar d-flex flex-column bg-black border-end border-secondary" style="width: 260px; min-width: 260px;">
+
+      <!-- Sidebar Header -->
+      <div class="p-3 border-bottom border-secondary">
+        <a href="index.html" class="text-decoration-none">
+          <span class="fw-bold fs-5 text-white">
+            <i class="bi bi-file-earmark-text-fill text-primary me-2"></i>
+            PDF<span class="text-primary">Chat</span>
+          </span>
+        </a>
+      </div>
+
+      <!-- New Chat Button -->
+      <div class="p-3">
+        <button class="btn btn-primary w-100" id="newChatBtn">
+          <i class="bi bi-plus-lg me-2"></i>New Chat
+        </button>
+      </div>
+
+      <!-- Chat List -->
+      <div class="flex-grow-1 overflow-auto px-2" id="chatList">
+        <!-- Placeholder chats — will be dynamic on Day 7 -->
+        <div class="chat-item active rounded-2 px-3 py-2 mb-1 d-flex align-items-center justify-content-between">
+          <span class="text-truncate small">My First Chat</span>
+          <i class="bi bi-three-dots text-secondary ms-2" style="cursor:pointer;"></i>
+        </div>
+        <div class="chat-item rounded-2 px-3 py-2 mb-1 d-flex align-items-center justify-content-between">
+          <span class="text-truncate small">Research Paper Q&A</span>
+          <i class="bi bi-three-dots text-secondary ms-2" style="cursor:pointer;"></i>
+        </div>
+        <div class="chat-item rounded-2 px-3 py-2 mb-1 d-flex align-items-center justify-content-between">
+          <span class="text-truncate small">Contract Review</span>
+          <i class="bi bi-three-dots text-secondary ms-2" style="cursor:pointer;"></i>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer (User Info placeholder) -->
+      <div class="p-3 border-top border-secondary d-flex align-items-center gap-2">
+        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center"
+             style="width:32px; height:32px; font-size:14px;">
+          U
+        </div>
+        <span class="small text-secondary">user@example.com</span>
+        <i class="bi bi-box-arrow-right ms-auto text-secondary" style="cursor:pointer;" title="Logout"></i>
+      </div>
+
+    </div>
+    <!-- ========== END SIDEBAR ========== -->
+
+
+    <!-- ========== MAIN AREA ========== -->
+    <div class="flex-grow-1 d-flex flex-column" style="min-width: 0;">
+
+      <!-- Top Bar -->
+      <div class="px-4 py-3 border-bottom border-secondary d-flex align-items-center justify-content-between bg-dark">
+        <div>
+          <h6 class="mb-0 fw-semibold">My First Chat</h6>
+          <small class="text-secondary">2 documents uploaded</small>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary" id="uploadBtn">
+            <i class="bi bi-upload me-1"></i>Upload PDF
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" id="docsBtn">
+            <i class="bi bi-file-earmark me-1"></i>Docs
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages Area -->
+      <div class="flex-grow-1 overflow-auto p-4" id="messagesArea">
+
+        <!-- Welcome State (shown when no messages) -->
+        <div class="text-center py-5" id="welcomeState">
+          <i class="bi bi-file-earmark-text-fill display-1 text-primary opacity-50"></i>
+          <h4 class="mt-3 fw-semibold">Upload a PDF to get started</h4>
+          <p class="text-secondary">Click "Upload PDF" above, then ask any question about your document.</p>
+        </div>
+
+        <!-- Sample AI Message (placeholder for Day 2 styling) -->
+        <div class="message-row d-flex gap-3 mb-4">
+          <div class="avatar ai-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:36px; height:36px;">
+            <i class="bi bi-stars text-primary"></i>
+          </div>
+          <div class="message-bubble ai-bubble p-3 rounded-3">
+            <p class="mb-1">Hello! I'm your PDF assistant. Upload a document and ask me anything about it.</p>
+            <small class="text-secondary">PDFChat AI</small>
+          </div>
+        </div>
+
+        <!-- Sample User Message -->
+        <div class="message-row d-flex gap-3 mb-4 flex-row-reverse">
+          <div class="avatar user-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:36px; height:36px;">
+            U
+          </div>
+          <div class="message-bubble user-bubble p-3 rounded-3">
+            <p class="mb-1">What is this document about?</p>
+            <small class="text-secondary">You</small>
+          </div>
+        </div>
+
+      </div>
+      <!-- End Messages Area -->
+
+      <!-- Input Bar -->
+      <div class="p-3 border-top border-secondary bg-dark">
+        <div class="input-group">
+          <textarea
+            id="messageInput"
+            class="form-control bg-secondary border-0 text-light"
+            placeholder="Ask a question about your PDF..."
+            rows="1"
+            style="resize: none; border-radius: 12px 0 0 12px;"
+          ></textarea>
+          <button class="btn btn-primary px-4" id="sendBtn" style="border-radius: 0 12px 12px 0;">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+        <small class="text-secondary mt-2 d-block text-center">
+          Answers are based on your uploaded documents only.
+        </small>
+      </div>
+
+    </div>
+    <!-- ========== END MAIN AREA ========== -->
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
