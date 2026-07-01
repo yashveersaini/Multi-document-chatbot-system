@@ -36,21 +36,18 @@
 
     <div class="sidebar-label">Recent Chats</div>
 
-    <!-- Chat list — populated dynamically on Day 7 -->
+    <!-- Chat list — populated by chat.js -->
     <div class="sidebar-chat-list" id="chatList">
-      <!-- Loading state -->
       <div class="text-center py-4 text-secondary small" id="chatListLoading">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
         Loading chats...
       </div>
-      <!-- Empty state (hidden by default) -->
       <div class="text-center py-4 text-secondary small d-none" id="chatListEmpty">
         <i class="bi bi-chat-text d-block fs-4 mb-2 opacity-50"></i>
         No chats yet.<br/>Click "New Chat" to start.
       </div>
     </div>
 
-    <!-- Sidebar Footer — user info filled by auth.js -->
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar-sm" id="sidebarUserInitial">?</div>
@@ -71,7 +68,6 @@
   ════════════════════════════════ -->
   <main class="main-content">
 
-    <!-- TOP BAR -->
     <header class="topbar">
       <button class="btn-icon d-lg-none me-2" id="sidebarOpen">
         <i class="bi bi-list fs-5"></i>
@@ -94,10 +90,7 @@
       </div>
     </header>
 
-    <!-- MESSAGES AREA -->
     <div class="messages-area" id="messagesArea">
-
-      <!-- Welcome state -->
       <div class="welcome-state" id="welcomeState">
         <div class="welcome-icon">
           <i class="bi bi-file-earmark-text-fill"></i>
@@ -112,7 +105,6 @@
         </button>
       </div>
 
-      <!-- Typing indicator (hidden by default) -->
       <div class="msg-row ai-row d-none" id="typingIndicator">
         <div class="msg-avatar ai-avatar-icon">
           <i class="bi bi-stars"></i>
@@ -125,10 +117,8 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- INPUT BAR -->
     <div class="input-bar">
       <div class="input-wrapper">
         <textarea
@@ -178,9 +168,7 @@
 
 </div>
 
-<!-- ════════════════════════════════
-     UPLOAD MODAL
-════════════════════════════════ -->
+<!-- UPLOAD MODAL -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content modal-dark">
@@ -283,12 +271,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/main.js"></script>
+<script src="js/chat.js"></script>
 <script>
-  // 🔐 This is the auth gate — runs before anything else
-  // If user is not logged in, they get redirected to index.html
-  initChatPage();
+  // 🔐 Auth gate — runs first
+  // Then loads the user's real chats from the backend
+  (async () => {
+    await initChatPage();   // redirects if not logged in
+    await loadChats();      // fetch + render chats from Day 6 API
+  })();
 
-  // Welcome screen "Create first chat" button
   document.getElementById("welcomeNewChat")?.addEventListener("click", () => {
     document.getElementById("newChatBtn")?.click();
   });

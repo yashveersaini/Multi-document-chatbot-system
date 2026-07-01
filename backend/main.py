@@ -6,6 +6,7 @@ from backend.database import test_connection
 
 # Import routers
 from backend.routes.auth import router as auth_router
+from backend.routes.chats import router as chats_router
 
 # ── App
 app = FastAPI(
@@ -25,6 +26,7 @@ app.add_middleware(
 
 # ── Routers
 app.include_router(auth_router)
+app.include_router(chats_router)
 
 # ── Routes
 @app.get("/", tags=["Root"])
