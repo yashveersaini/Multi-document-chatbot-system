@@ -5,17 +5,16 @@ from backend.config import settings
 from backend.database import test_connection
 
 # Import routers
-from backend.routes.auth import router as auth_router
-from backend.routes.chats import router as chats_router
+from backend.routes.auth      import router as auth_router
+from backend.routes.chats     import router as chats_router
+from backend.routes.documents import router as documents_router
 
-# ── App
 app = FastAPI(
     title="RAG PDF Chatbot API",
     description="Backend API for the RAG PDF Chatbot",
     version="1.0.0",
 )
 
-# ── CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,15 +26,14 @@ app.add_middleware(
 # ── Routers
 app.include_router(auth_router)
 app.include_router(chats_router)
+app.include_router(documents_router)
 
-# ── Routes
 @app.get("/", tags=["Root"])
 def root():
     return {
         "message": "RAG PDF Chatbot API is running 🚀",
         "docs": "/docs",
     }
-
 
 @app.get("/health", tags=["Health"])
 def health_check():
@@ -45,7 +43,6 @@ def health_check():
         "api":      "ok",
         "database": "connected" if db_ok else "unreachable",
     }
-
 
 @app.get("/health/env", tags=["Health"])
 def env_check():

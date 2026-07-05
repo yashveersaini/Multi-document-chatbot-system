@@ -27,3 +27,5 @@ langchain-text-splitters==1.0.0
 # Vector Database
 pinecone==7.3.0
 
+python-multipart==0.0.32
+
