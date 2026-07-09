@@ -7,13 +7,22 @@ let currentChatId = null;
 let allChats = [];
 let chatPendingDelete = null;
 
+// ── Expose active chat ID for upload.js
+window.getCurrentChatId = () => currentChatId;
+
+// ── Called by upload.js after upload to refresh sidebar count
+window.refreshChatDocCount = function(chatId, count) {
+  const idx = allChats.findIndex(c => c.id === chatId);
+  if (idx !== -1) allChats[idx].document_count = count;
+  renderChatList();
+};
+
 // ─────────────────────────────────────────────
-// LOAD ALL CHATS — called on page load
+// LOAD ALL CHATS
 // ─────────────────────────────────────────────
 async function loadChats() {
   const loadingEl = document.getElementById("chatListLoading");
   const emptyEl   = document.getElementById("chatListEmpty");
-  const listEl    = document.getElementById("chatList");
 
   loadingEl?.classList.remove("d-none");
   emptyEl?.classList.add("d-none");
@@ -31,7 +40,6 @@ async function loadChats() {
     }
 
     emptyEl?.classList.add("d-none");
-
     renderChatList();
 
     if (!currentChatId && allChats.length > 0) {
@@ -41,21 +49,17 @@ async function loadChats() {
   } catch (err) {
     loadingEl?.classList.add("d-none");
     showToast("Failed to load chats: " + err.message, "danger");
-    console.error(err);
   }
 }
 
-
 // ─────────────────────────────────────────────
-// RENDER THE CHAT LIST IN SIDEBAR
+// RENDER CHAT LIST
 // ─────────────────────────────────────────────
 function renderChatList() {
   const listEl = document.getElementById("chatList");
   if (!listEl) return;
 
-  // Keep the loading/empty state elements, remove old chat items only
-  const existingItems = listEl.querySelectorAll(".chat-item");
-  existingItems.forEach(item => item.remove());
+  listEl.querySelectorAll(".chat-item").forEach(item => item.remove());
 
   allChats.forEach(chat => {
     const item = document.createElement("div");
@@ -75,19 +79,16 @@ function renderChatList() {
       </div>
     `;
 
-    // Click on the chat item (not buttons) → select it
     item.addEventListener("click", (e) => {
       if (e.target.closest(".chat-item-actions")) return;
       selectChat(chat.id);
     });
 
-    // Rename button
     item.querySelector(".rename-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       openRenameModal(chat.id, chat.title);
     });
 
-    // Delete button
     item.querySelector(".delete-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       openDeleteModal(chat.id, chat.title);
@@ -98,7 +99,7 @@ function renderChatList() {
 }
 
 // ─────────────────────────────────────────────
-// SELECT A CHAT — mark active, update topbar
+// SELECT A CHAT
 // ─────────────────────────────────────────────
 function selectChat(chatId) {
   currentChatId = chatId;
@@ -106,31 +107,25 @@ function selectChat(chatId) {
   const chat = allChats.find(c => c.id === chatId);
   if (!chat) return;
 
-  // Update active state in sidebar
   document.querySelectorAll(".chat-item").forEach(item => {
     item.classList.toggle("active", item.dataset.chatId === chatId);
   });
 
-  // Update topbar
-  const titleEl = document.getElementById("chatTitle");
+  const titleEl    = document.getElementById("chatTitle");
   const docCountEl = document.getElementById("chatDocCount");
-  if (titleEl) titleEl.textContent = chat.title;
-  if (docCountEl) {
-    docCountEl.textContent = `${chat.document_count} document${chat.document_count !== 1 ? "s" : ""}`;
-  }
+  if (titleEl)    titleEl.textContent    = chat.title;
+  if (docCountEl) docCountEl.textContent = `${chat.document_count} document${chat.document_count !== 1 ? "s" : ""}`;
 
-  // Enable the input bar now that a chat is selected
   const messageInput = document.getElementById("messageInput");
-  const sendBtn = document.getElementById("sendBtn");
+  const sendBtn      = document.getElementById("sendBtn");
   if (messageInput) messageInput.disabled = false;
-  if (sendBtn) sendBtn.disabled = false;
+  if (sendBtn)      sendBtn.disabled      = false;
 
   hideWelcomeState();
 
-  // Day 8+ will load this chat's documents and messages here
-  console.log("Selected chat:", chatId, "— loading messages/docs coming Day 8+");
+  // ── Load documents for this chat (upload.js)
+  if (window.loadDocuments) window.loadDocuments(chatId);
 
-  // Close sidebar on mobile after selecting
   document.getElementById("sidebar")?.classList.remove("open");
 }
 
@@ -139,7 +134,10 @@ function selectChat(chatId) {
 // ─────────────────────────────────────────────
 async function createNewChat() {
   const btn = document.getElementById("newChatBtn");
-  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating...`; }
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating...`;
+  }
 
   try {
     const newChat = await authFetch("/chats", {
@@ -148,22 +146,20 @@ async function createNewChat() {
     });
 
     allChats.unshift(newChat);
-
     document.getElementById("chatListEmpty")?.classList.add("d-none");
-
     renderChatList();
     selectChat(newChat.id);
-
     showToast("New chat created!", "success");
 
   } catch (err) {
     showToast("Failed to create chat: " + err.message, "danger");
-    console.error(err);
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="bi bi-plus-lg"></i> New Chat`; }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-plus-lg"></i> New Chat`;
+    }
   }
 }
-
 
 // ─────────────────────────────────────────────
 // RENAME MODAL
@@ -174,23 +170,15 @@ function openRenameModal(chatId, currentTitle) {
   chatPendingRename = chatId;
   const input = document.getElementById("renameChatInput");
   if (input) input.value = currentTitle;
-
   const modal = new bootstrap.Modal(document.getElementById("renameModal"));
   modal.show();
-
-  // Focus input after modal opens
   setTimeout(() => input?.focus(), 300);
 }
 
 async function confirmRename() {
-  const input = document.getElementById("renameChatInput");
+  const input    = document.getElementById("renameChatInput");
   const newTitle = input?.value.trim();
-
-  if (!newTitle) {
-    showToast("Chat name cannot be empty", "danger");
-    return;
-  }
-
+  if (!newTitle)          { showToast("Chat name cannot be empty", "danger"); return; }
   if (!chatPendingRename) return;
 
   try {
@@ -199,13 +187,11 @@ async function confirmRename() {
       body: JSON.stringify({ title: newTitle }),
     });
 
-    // Update local state
     const idx = allChats.findIndex(c => c.id === chatPendingRename);
     if (idx !== -1) allChats[idx].title = updated.title;
 
     renderChatList();
 
-    // Update topbar if this is the active chat
     if (currentChatId === chatPendingRename) {
       const titleEl = document.getElementById("chatTitle");
       if (titleEl) titleEl.textContent = updated.title;
@@ -229,8 +215,11 @@ function openDeleteModal(chatId, title) {
   const nameEl = document.getElementById("deleteChatName");
   if (nameEl) nameEl.textContent = `"${title}"`;
 
-  const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
-  modal.show();
+  // Make sure confirm button deletes a CHAT (not a doc)
+  const confirmBtn = document.getElementById("deleteChatConfirm");
+  confirmBtn.onclick = confirmDelete;
+
+  new bootstrap.Modal(document.getElementById("deleteModal")).show();
 }
 
 async function confirmDelete() {
@@ -239,11 +228,9 @@ async function confirmDelete() {
   try {
     await authFetch(`/chats/${chatPendingDelete}`, { method: "DELETE" });
 
-    // Remove from local state
     allChats = allChats.filter(c => c.id !== chatPendingDelete);
     renderChatList();
 
-    // If we deleted the active chat, select another one or show empty state
     if (currentChatId === chatPendingDelete) {
       currentChatId = null;
       if (allChats.length > 0) {
@@ -251,14 +238,14 @@ async function confirmDelete() {
       } else {
         showWelcomeState();
         document.getElementById("chatListEmpty")?.classList.remove("d-none");
-        const titleEl = document.getElementById("chatTitle");
+        const titleEl    = document.getElementById("chatTitle");
         const docCountEl = document.getElementById("chatDocCount");
-        if (titleEl) titleEl.textContent = "Select a chat";
+        if (titleEl)    titleEl.textContent    = "Select a chat";
         if (docCountEl) docCountEl.textContent = "No documents";
         const messageInput = document.getElementById("messageInput");
-        const sendBtn = document.getElementById("sendBtn");
+        const sendBtn      = document.getElementById("sendBtn");
         if (messageInput) messageInput.disabled = true;
-        if (sendBtn) sendBtn.disabled = true;
+        if (sendBtn)      sendBtn.disabled      = true;
       }
     }
 
@@ -273,7 +260,7 @@ async function confirmDelete() {
 }
 
 // ─────────────────────────────────────────────
-// WELCOME STATE HELPERS
+// WELCOME STATE
 // ─────────────────────────────────────────────
 function showWelcomeState() {
   document.getElementById("welcomeState")?.classList.remove("d-none");
@@ -283,7 +270,7 @@ function hideWelcomeState() {
 }
 
 // ─────────────────────────────────────────────
-// UTILITY — escape HTML to prevent XSS in chat titles
+// UTILITY
 // ─────────────────────────────────────────────
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -292,21 +279,16 @@ function escapeHtml(str) {
 }
 
 // ─────────────────────────────────────────────
-// EVENT LISTENERS — wire up buttons
+// EVENT LISTENERS
 // ─────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newChatBtn")?.addEventListener("click", createNewChat);
   document.getElementById("renameChatConfirm")?.addEventListener("click", confirmRename);
   document.getElementById("deleteChatConfirm")?.addEventListener("click", confirmDelete);
 
-  // Enter key in rename input submits
   document.getElementById("renameChatInput")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      confirmRename();
-    }
+    if (e.key === "Enter") { e.preventDefault(); confirmRename(); }
   });
 });
 
-// Expose loadChats globally so chat.html can call it after auth succeeds
 window.loadChats = loadChats;

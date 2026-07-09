@@ -268,16 +268,16 @@
   </div>
 </div>
 
+<!-- At the bottom of chat.html, update the script tags -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/main.js"></script>
 <script src="js/chat.js"></script>
+<script src="js/upload.js"></script>   <!-- ← ADD THIS LINE -->
 <script>
-  // 🔐 Auth gate — runs first
-  // Then loads the user's real chats from the backend
   (async () => {
-    await initChatPage();   // redirects if not logged in
-    await loadChats();      // fetch + render chats from Day 6 API
+    await initChatPage();
+    await loadChats();
   })();
 
   document.getElementById("welcomeNewChat")?.addEventListener("click", () => {
